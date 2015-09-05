@@ -1,0 +1,12 @@
+@(taskUrl: String, masterJs: String)
+@wrapper {
+<a href="/job/@taskUrl">link for workers</a>
+<script>
+    var code = "@masterJs";
+    function startJob() {
+        document.getElementById("run").style.display = "none";
+        eval(code);
+    }
+</script>
+<button id="run" onclick="startJob()">run</button>
+}
