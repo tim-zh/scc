@@ -1,8 +1,36 @@
 @()
 @wrapper {
-<form method="post" action="/step2">
-    <textarea name="masterJs" placeholder="master in your browser"></textarea>
-    <textarea name="workerJs" placeholder="workers in other browsers"></textarea>
-    <button type="submit">submit</button>
-</form>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="well bs-component">
+				<form class="form-horizontal" method="post" action="/step2">
+					<fieldset>
+						<legend>Paste your code for distributed computation</legend>
+						<div class="form-group">
+							<label for="textArea" class="col-xs-2 control-label">master js</label>
+							<div class="col-xs-10">
+								<textarea class="form-control" rows="3" name="masterJs"></textarea>
+								<span class="help-block">master code in your browser</span>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="textArea" class="col-xs-2 control-label">worker js</label>
+							<div class="col-xs-10">
+								<textarea class="form-control" rows="3" name="workerJs"></textarea>
+								<span class="help-block">workers code in other browsers</span>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-10 col-xs-offset-2">
+								<button type="submit" class="btn btn-primary">submit</button>
+								<button type="reset" class="btn btn-default">cancel</button>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
 }

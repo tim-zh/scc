@@ -1,12 +1,19 @@
 @(taskUrl: String, masterJs: String)
 @wrapper {
-<a href="/job/@taskUrl">link for workers</a>
-<script>
-    var code = "@masterJs";
-    function startJob() {
-        document.getElementById("run").style.display = "none";
-        eval(code);
-    }
-</script>
-<button id="run" onclick="startJob()">run</button>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-xs-6">
+			<h2><a href="/job/@taskUrl">link for workers</a></h2>
+			<script>
+				var code = "@masterJs";
+				function startJob() {
+					document.getElementById("run").style.display = "none";
+					eval(code);
+				}
+			</script>
+			<hr/>
+			<button class="btn btn-default btn-lg" id="run" onclick="startJob()">run master code</button>
+		</div>
+	</div>
+</div>
 }
