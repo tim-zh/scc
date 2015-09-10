@@ -1,9 +1,11 @@
-@(workerJs: String)
+@(jobId: String, workerJs: String)
 @wrapper {
 <div class="container-fluid">
 	<h1>job in progress</h1>
 </div>
 <script>
+	SCC.jobId = '@jobId';
+	SCC._notifyMaster();
 	@workerJs
 </script>
 }

@@ -1,35 +1,55 @@
-//master api
+var SCC = {
+	workerJs: "",
 
-function setStatus(status) {
-//
-}
+	jobId: "",
 
-function displayResult(result) {
-//
-}
+	workerId: -1,
 
-function onWorkerUp(callback) {
-//
-}
+	//master api
 
-function onWorkerAnswer(callback) {
-//
-}
+	_getWorkersList: function(callback) {
+		$.get('/job/' + jobId + '/workersList', callback);
+	},
 
-function sendMessage(workerId, message) {
-//
-}
+	_getMessageList: function(callback) {
+		$.get('/job/' + jobId + '/messageList', callback);
+	},
 
-//worker api
+	setNewWorkerCallback: function(callback) {
+		//todo
+	},
 
-function calculateNodePower() {
-//
-}
+	setNewMessageCallback: function(callback) {
+		//todo
+	},
 
-function sendMessage(message) {
-//
-}
+	sendMessage: function(workerId, message) {
+		$.post('/job/' + jobId + '/worker/' + workerId + '/message', { 'msg': message });
+	},
 
-function onMessage(callback) {
-//
-}
+	updateResult: function(result) {
+		$('#result')[0].innerHTML = result;
+	},
+
+	//worker api
+
+	_notifyMaster: function() {
+		$.get('/job/' + jobId + '/newWorker', function(data) { workerId = data })
+	},
+
+	_heartBeat: function() {
+		$.get('/job/' + jobId + '/worker/' + workerId + '/heartBeat');
+	},
+
+	_getMessageList: function(callback) {
+		$.get('/job/' + jobId + '/worker/' + workerId + '/messageList', callback);
+	},
+
+	setNewMessageCallback: function(callback) {
+		//todo
+	},
+
+	sendMessage: function(message) {
+		$.post('/job/' + jobId + '/message', { 'msg': message });
+	}
+};

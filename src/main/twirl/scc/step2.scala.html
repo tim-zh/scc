@@ -1,18 +1,20 @@
-@(taskUrl: String, masterJs: String)
+@(jobId: String, masterJs: String)
 @wrapper {
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-xs-6">
-			<h2><a href="/job/@taskUrl">link for workers</a></h2>
+			<h2><a href="/job/@jobId">link for workers</a></h2>
 			<script>
-				var code = "@masterJs";
+				SCC.code = "@masterJs";
+				SCC.jobId = "@jobId";
 				function startJob() {
-					document.getElementById("run").style.display = "none";
+					$("#run")[0].style.display = "none";
 					eval(code);
 				}
 			</script>
 			<hr/>
 			<button class="btn btn-default btn-lg" id="run" onclick="startJob()">run master code</button>
+			<pre><code id="result"></code></pre>
 		</div>
 	</div>
 </div>

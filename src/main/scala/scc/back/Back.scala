@@ -6,19 +6,28 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 trait Back {
-	def set(value: String): Future[String]
+	def addJob(workerJs: String): Future[String]
 
-	def get(id: String): Future[Option[String]]
+	def getJob(id: String): Future[Option[JobInfo]]
+
+	def addWorker(jobId: String): Future[Option[String]]
 }
 
 class BackImpl extends Back {
-	private val storage = new mutable.HashMap[String, String]
+	private val storage = new mutable.HashMap[String, JobInfo]
 
-	override def set(value: String): Future[String] = {
-		val id = UUID.randomUUID().toString
-		storage.put(id, value)
-		Future.successful(id)
+	override def addJob(workerJs: String): Future[String] = {
+		val jobid = UUID.randomUUID().toString
+		storage.put(jobid, JobInfo(jobid, workerJs, Seq[String]()))
+		Future.successful(jobid)
 	}
 
-	override def get(id: String): Future[Option[String]] = Future.successful(storage.get(id))
+	override def getJob(id: String): Future[Option[JobInfo]] = Future.successful(storage.get(id))
+
+	override def addWorker(jobId: String): Future[Option[String]] =
+		Future.successful(storage.get(jobId) map { job =>
+			val workerId = UUID.randomUUID().toString
+			job.workers :+= workerId
+			workerId
+		})
 }
