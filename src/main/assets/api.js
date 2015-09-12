@@ -1,22 +1,26 @@
 var SCC = {
-	workerJs: "",
-
 	jobId: "",
-
-	workerId: -1,
 
 	//master api
 
-	_getWorkersList: function(callback) {
-		$.get('/job/' + jobId + '/workersList', callback);
+	_lastKnownWorkerId: -1,
+
+	_newWorkerCallback: null,
+
+	_updateWorkersList: function() {
+		$.get('/job/' + SCC.jobId + '/workersList?lastId=' + SCC._lastKnownWorkerId, function(id) {
+			for (var i = SCC._lastKnownWorkerId + 1; i <= id; i++)
+				SCC._newWorkerCallback(i);
+			SCC._lastKnownWorkerId = id;
+		});
 	},
 
 	_getMessageList: function(callback) {
-		$.get('/job/' + jobId + '/messageList', callback);
+		$.get('/job/' + SCC.jobId + '/messageList', callback);
 	},
 
 	setNewWorkerCallback: function(callback) {
-		//todo
+		SCC._newWorkerCallback = callback;
 	},
 
 	setNewMessageCallback: function(callback) {
@@ -24,7 +28,7 @@ var SCC = {
 	},
 
 	sendMessage: function(workerId, message) {
-		$.post('/job/' + jobId + '/worker/' + workerId + '/message', { 'msg': message });
+		$.post('/job/' + SCC.jobId + '/worker/' + workerId + '/message', { 'msg': message });
 	},
 
 	updateResult: function(result) {
@@ -33,16 +37,20 @@ var SCC = {
 
 	//worker api
 
+	workerSelfId: -1,
+
+	workerJs: "",
+
 	_notifyMaster: function() {
-		$.get('/job/' + jobId + '/newWorker', function(data) { workerId = data })
+		$.get('/job/' + SCC.jobId + '/newWorker', function(data) { SCC.workerSelfId = data })
 	},
 
 	_heartBeat: function() {
-		$.get('/job/' + jobId + '/worker/' + workerId + '/heartBeat');
+		$.get('/job/' + SCC.jobId + '/worker/' + SCC.workerSelfId + '/heartBeat');
 	},
 
 	_getMessageList: function(callback) {
-		$.get('/job/' + jobId + '/worker/' + workerId + '/messageList', callback);
+		$.get('/job/' + SCC.jobId + '/worker/' + SCC.workerSelfId + '/messageList', callback);
 	},
 
 	setNewMessageCallback: function(callback) {
@@ -50,6 +58,6 @@ var SCC = {
 	},
 
 	sendMessage: function(message) {
-		$.post('/job/' + jobId + '/message', { 'msg': message });
+		$.post('/job/' + SCC.jobId + '/message', { 'msg': message });
 	}
 };

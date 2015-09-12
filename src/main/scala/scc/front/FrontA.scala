@@ -46,11 +46,18 @@ trait HttpApi extends HttpService { this: BackRef =>
 		} ~
 		path("job" / Segment / "workersList") { jobId =>
 			(get & gzipJson) {
-				onSuccess(back.getJob(jobId)) { job =>
-					if (job.isDefined)
-						complete(toJson(job.get.workers))
-					else
-						complete(StatusCodes.NotFound, "Wrong job id")
+				parameters('lastId) { lastId =>
+					val lastWorkerId = try
+						Integer.parseInt(lastId)
+					catch {
+						case _: NumberFormatException => -1
+					}
+					onSuccess(back.getJob(jobId)) { job =>
+						if (job.isDefined)
+							complete(job.get.workers.toString)
+						else
+							complete(StatusCodes.NotFound, "Wrong job id")
+					}
 				}
 			}
 		} ~
@@ -58,7 +65,7 @@ trait HttpApi extends HttpService { this: BackRef =>
 			(get & gzipHtml) {
 				onSuccess(back.addWorker(jobId)) { workerId =>
 					if (workerId.isDefined)
-						complete(workerId.get)
+						complete(workerId.get.toString)
 					else
 						complete(StatusCodes.NotFound, "Wrong job id")
 				}

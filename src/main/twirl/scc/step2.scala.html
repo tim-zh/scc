@@ -9,7 +9,10 @@
 				SCC.jobId = "@jobId";
 				function startJob() {
 					$("#run")[0].style.display = "none";
-					eval(code);
+					setInterval(function() {
+						SCC._updateWorkersList();
+					}, 2000);
+					eval(SCC.code);
 				}
 			</script>
 			<hr/>

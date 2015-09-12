@@ -10,7 +10,7 @@ trait Back {
 
 	def getJob(id: String): Future[Option[JobInfo]]
 
-	def addWorker(jobId: String): Future[Option[String]]
+	def addWorker(jobId: String): Future[Option[Int]]
 }
 
 class BackImpl extends Back {
@@ -18,16 +18,15 @@ class BackImpl extends Back {
 
 	override def addJob(workerJs: String): Future[String] = {
 		val jobid = UUID.randomUUID().toString
-		storage.put(jobid, JobInfo(jobid, workerJs, Seq[String]()))
+		storage.put(jobid, JobInfo(jobid, workerJs, -1))
 		Future.successful(jobid)
 	}
 
 	override def getJob(id: String): Future[Option[JobInfo]] = Future.successful(storage.get(id))
 
-	override def addWorker(jobId: String): Future[Option[String]] =
+	override def addWorker(jobId: String): Future[Option[Int]] =
 		Future.successful(storage.get(jobId) map { job =>
-			val workerId = UUID.randomUUID().toString
-			job.workers :+= workerId
-			workerId
+			job.workers += 1
+			job.workers
 		})
 }
