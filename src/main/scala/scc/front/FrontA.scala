@@ -79,7 +79,12 @@ trait HttpApi extends HttpService { this: BackRef =>
 		path("job" / Segment / "message") { jobId =>
 			(post & gzipJson) {
 				formField("msg") { msg =>
-					complete("todo")
+					onSuccess(back.addMessageToMaster(jobId, msg)) { exceptionDesc =>
+						if (exceptionDesc.isDefined)
+							complete(StatusCodes.NotFound, exceptionDesc.get)
+						else
+							complete("")
+					}
 				}
 			}
 		} ~

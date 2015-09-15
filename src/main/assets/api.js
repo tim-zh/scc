@@ -9,9 +9,11 @@ var SCC = {
 
 	_updateWorkersList: function() {
 		$.get('/job/' + SCC.jobId + '/workersList?lastId=' + SCC._lastKnownWorkerId, function(id) {
-			for (var i = SCC._lastKnownWorkerId + 1; i <= id; i++)
-				SCC._newWorkerCallback(i);
-			SCC._lastKnownWorkerId = id;
+			if (SCC._newWorkerCallback) {
+				for (var i = SCC._lastKnownWorkerId + 1; i <= id; i++)
+					SCC._newWorkerCallback(i);
+				SCC._lastKnownWorkerId = id;
+			}
 		});
 	},
 
