@@ -8,7 +8,7 @@ var SCC = {
 	_newWorkerCallback: null,
 
 	_updateWorkersList: function() {
-		$.get('/job/' + SCC.jobId + '/workersList?lastId=' + SCC._lastKnownWorkerId, function(id) {
+		$.get('/job/' + SCC.jobId + '/workersList', function(id) {
 			if (SCC._newWorkerCallback) {
 				for (var i = SCC._lastKnownWorkerId + 1; i <= id; i++)
 					SCC._newWorkerCallback(i);

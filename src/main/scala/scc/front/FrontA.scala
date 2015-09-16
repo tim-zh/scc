@@ -26,7 +26,7 @@ trait HttpApi extends HttpService { this: BackRef =>
 	private val gzipHtml = encodeResponse(Gzip) & respondWithMediaType(`text/html`)
 	private val gzipJson = encodeResponse(Gzip) & respondWithMediaType(`application/json`)
 
-	val route =
+	private val indexMasterSubmitRoute =
 		path("") {
 			redirect("step1", StatusCodes.MovedPermanently)
 		} ~
@@ -43,21 +43,16 @@ trait HttpApi extends HttpService { this: BackRef =>
 					}
 				}
 			}
-		} ~
+		}
+
+	private val workersManagement =
 		path("job" / Segment / "workersList") { jobId =>
 			(get & gzipJson) {
-				parameters('lastId) { lastId =>
-					val lastWorkerId = try
-						Integer.parseInt(lastId)
-					catch {
-						case _: NumberFormatException => -1
-					}
-					onSuccess(back.getJob(jobId)) { job =>
-						if (job.isDefined)
-							complete(job.get.workers.toString)
-						else
-							complete(StatusCodes.NotFound, "Wrong job id")
-					}
+				onSuccess(back.getJob(jobId)) { job =>
+					if (job.isDefined)
+						complete(job.get.workers.toString)
+					else
+						complete(StatusCodes.NotFound, "Wrong job id")
 				}
 			}
 		} ~
@@ -70,7 +65,9 @@ trait HttpApi extends HttpService { this: BackRef =>
 						complete(StatusCodes.NotFound, "Wrong job id")
 				}
 			}
-		} ~
+		}
+
+	private val masterMessages =
 		path("job" / Segment / "messageList") { jobId =>
 			(get & gzipJson) {
 				complete("todo")
@@ -87,12 +84,9 @@ trait HttpApi extends HttpService { this: BackRef =>
 					}
 				}
 			}
-		} ~
-		path("job" / Segment / "worker"/ Segment / "heartBeat") { (jobId, workerId) =>
-			get {
-				complete("todo")
-			}
-		} ~
+		}
+
+	private val workersMessages =
 		path("job" / Segment / "worker"/ Segment / "messageList") { (jobId, workerId) =>
 			(get & gzipJson) {
 				complete("todo")
@@ -101,8 +95,30 @@ trait HttpApi extends HttpService { this: BackRef =>
 		path("job" / Segment / "worker"/ Segment / "message") { (jobId, workerId) =>
 			(post & gzipJson) {
 				formField("msg") { msg =>
-					complete("todo")
+					val parsedWorkerId = try
+						Integer.parseInt(workerId)
+					catch {
+						case _: NumberFormatException => -1
+					}
+					onSuccess(back.addMessageToWorker(jobId, parsedWorkerId, msg)) { exceptionDesc =>
+						if (exceptionDesc.isDefined)
+							complete(StatusCodes.NotFound, exceptionDesc.get)
+						else
+							complete("")
+					}
 				}
+			}
+		}
+
+	val route =
+		indexMasterSubmitRoute ~
+		workersManagement ~
+		masterMessages ~
+		workersMessages ~
+		path("job" / Segment / "worker"/ Segment / "heartBeat") { (jobId, workerId) =>
+			get {
+				//todo
+				complete("ok")
 			}
 		} ~
 		path("job" / Rest) { jobId =>
