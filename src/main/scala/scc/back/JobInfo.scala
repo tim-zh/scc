@@ -5,8 +5,8 @@ import scala.collection.mutable
 case class JobInfo(id: String,
 									 workerJs: String,
 									 var workers: Int,
-									 masterInbox: mutable.Map[Int, String],
-									 workersInboxes: mutable.Map[Int, mutable.Map[Int, String]]) {
+									 masterInbox: mutable.LinkedHashMap[Int, String] = mutable.LinkedHashMap(),
+									 workersInboxes: mutable.Map[Int, mutable.LinkedHashMap[Int, String]] = mutable.Map()) {
 	def addMsgToMaster(msg: String) = masterInbox.put(masterInbox.size, msg)
 
 	def getMsgToMaster(msgId: Int) = masterInbox.get(msgId)
@@ -15,7 +15,7 @@ case class JobInfo(id: String,
 
 	def addMsgToWorker(workerId: Int, msg: String) = {
 		if (! workersInboxes.contains(workerId))
-			workersInboxes.put(workerId, mutable.Map())
+			workersInboxes.put(workerId, mutable.LinkedHashMap())
 		workersInboxes(workerId).put(workersInboxes(workerId).size, msg)
 	}
 

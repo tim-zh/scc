@@ -5,7 +5,6 @@
 </div>
 <script>
 	SCC.jobId = '@jobId';
-	SCC._notifyMaster();
-	@workerJs
+	SCC._notifyMaster(function() { @workerJs });
 </script>
 }

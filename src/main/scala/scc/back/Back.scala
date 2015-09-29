@@ -22,7 +22,7 @@ class BackImpl extends Back {
 
 	override def addJob(workerJs: String): Future[String] = {
 		val jobid = UUID.randomUUID().toString
-		storage.put(jobid, JobInfo(jobid, workerJs, -1, mutable.Map(), mutable.Map()))
+		storage.put(jobid, JobInfo(jobid, workerJs, -1))
 		Future.successful(jobid)
 	}
 

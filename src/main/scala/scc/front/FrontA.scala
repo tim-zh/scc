@@ -9,6 +9,7 @@ import spray.httpx.encoding.Gzip
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class FrontA(val back: Back) extends Actor with HttpApi with BackRef {
@@ -26,7 +27,7 @@ trait HttpApi extends HttpService { this: BackRef =>
 	private val gzipHtml = encodeResponse(Gzip) & respondWithMediaType(`text/html`)
 	private val gzipJson = encodeResponse(Gzip) & respondWithMediaType(`application/json`)
 
-	private val indexMasterSubmitRoute =
+	private val indexMasterSubmit =
 		path("") {
 			redirect("step1", StatusCodes.MovedPermanently)
 		} ~
@@ -48,21 +49,15 @@ trait HttpApi extends HttpService { this: BackRef =>
 	private val workersManagement =
 		path("job" / Segment / "workersList") { jobId =>
 			(get & gzipJson) {
-				onSuccess(back.getJob(jobId)) { job =>
-					if (job.isDefined)
-						complete(job.get.workers.toString)
-					else
-						complete(StatusCodes.NotFound, "Wrong job id")
+				onBack(back.getJob(jobId)) { job =>
+					job.workers.toString
 				}
 			}
 		} ~
 		path("job" / Segment / "newWorker") { jobId =>
 			(get & gzipHtml) {
-				onSuccess(back.addWorker(jobId)) { workerId =>
-					if (workerId.isDefined)
-						complete(workerId.get.toString)
-					else
-						complete(StatusCodes.NotFound, "Wrong job id")
+				onBack(back.addWorker(jobId)) { workerId =>
+					workerId.toString
 				}
 			}
 		}
@@ -70,7 +65,12 @@ trait HttpApi extends HttpService { this: BackRef =>
 	private val masterMessages =
 		path("job" / Segment / "messageList") { jobId =>
 			(get & gzipJson) {
-				complete("todo")
+				parameter('fromId) { fromId =>
+					onBack(back.getJob(jobId)) { job =>
+						val lastMessageId = strToInt(fromId).getOrElse(-1)
+						toJson(job.getAllMsgToMasterAfter(lastMessageId))
+					}
+				}
 			}
 		} ~
 		path("job" / Segment / "message") { jobId =>
@@ -111,7 +111,7 @@ trait HttpApi extends HttpService { this: BackRef =>
 		}
 
 	val route =
-		indexMasterSubmitRoute ~
+		indexMasterSubmit ~
 		workersManagement ~
 		masterMessages ~
 		workersMessages ~
@@ -123,11 +123,8 @@ trait HttpApi extends HttpService { this: BackRef =>
 		} ~
 		path("job" / Rest) { jobId =>
 			(get & gzipHtml) {
-				onSuccess(back.getJob(jobId)) { job =>
-					if (job.isDefined)
-						complete(TemplateProvider.worker(jobId, job.get.workerJs))
-					else
-						complete(StatusCodes.NotFound, "Wrong job id")
+				onBack(back.getJob(jobId)) { job =>
+					TemplateProvider.worker(jobId, job.workerJs) //todo add new worker here, inject worker's id in template
 				}
 			}
 		} ~
@@ -137,6 +134,21 @@ trait HttpApi extends HttpService { this: BackRef =>
 		path("assets" / Rest) { path =>
 			getFromResource("%s" format path)
 		}
+
+	def onBack[T](backCall: => Future[Option[T]], warning: String = "Wrong job id")(response: T => String) = {
+		onSuccess(backCall) { result =>
+			if (result.isDefined)
+				complete(response(result.get))
+			else
+				complete(StatusCodes.NotFound, warning)
+		}
+	}
+
+	def strToInt(s: String) = try
+		Some(s.toInt)
+	catch {
+		case _: NumberFormatException => None
+	}
 
 	def toJson[T](x: Iterable[T]): String = "[" + x.map("'" + _.toString + "'").reduceOption(_ + "," + _).getOrElse("") + "]"
 }

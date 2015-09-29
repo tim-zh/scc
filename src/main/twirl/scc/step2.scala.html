@@ -5,14 +5,14 @@
 		<div class="col-xs-6">
 			<h2><a href="/job/@jobId">link for workers</a></h2>
 			<script>
-				SCC.code = "@Html(masterJs)";
 				SCC.jobId = "@jobId";
 				function startJob() {
 					$("#run")[0].style.display = "none";
 					setInterval(function() {
 						SCC._updateWorkersList();
+						SCC._updateMessageList();
 					}, 2000);
-					eval(SCC.code);
+					@Html(masterJs)
 				}
 			</script>
 			<hr/>
