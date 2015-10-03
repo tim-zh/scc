@@ -56,8 +56,8 @@ trait HttpApi extends HttpService { this: BackRef =>
 		} ~
 		path("job" / Segment / "newWorker") { jobId =>
 			(get & gzipHtml) {
-				onBack(back.addWorker(jobId)) { workerId =>
-					workerId.toString
+				onBack(back.addWorker(jobId)) { pair =>
+					TemplateProvider.worker(jobId, pair._2.toString, pair._1.workerJs)
 				}
 			}
 		}
@@ -89,17 +89,19 @@ trait HttpApi extends HttpService { this: BackRef =>
 	private val workersMessages =
 		path("job" / Segment / "worker"/ Segment / "messageList") { (jobId, workerId) =>
 			(get & gzipJson) {
-				complete("todo")
+				parameter('fromId) { fromId =>
+					onBack(back.getJob(jobId)) { job =>
+						val lastMessageId = strToInt(fromId).getOrElse(-1)
+						val parsedWorkerId = strToInt(workerId).getOrElse(-1)
+						toJson(job.getAllMsgToWorkerAfter(parsedWorkerId, lastMessageId))
+					}
+				}
 			}
 		} ~
 		path("job" / Segment / "worker"/ Segment / "message") { (jobId, workerId) =>
 			(post & gzipJson) {
 				formField("msg") { msg =>
-					val parsedWorkerId = try
-						Integer.parseInt(workerId)
-					catch {
-						case _: NumberFormatException => -1
-					}
+					val parsedWorkerId = strToInt(workerId).getOrElse(-1)
 					onSuccess(back.addMessageToWorker(jobId, parsedWorkerId, msg)) { exceptionDesc =>
 						if (exceptionDesc.isDefined)
 							complete(StatusCodes.NotFound, exceptionDesc.get)
@@ -119,13 +121,6 @@ trait HttpApi extends HttpService { this: BackRef =>
 			get {
 				//todo
 				complete("ok")
-			}
-		} ~
-		path("job" / Rest) { jobId =>
-			(get & gzipHtml) {
-				onBack(back.getJob(jobId)) { job =>
-					TemplateProvider.worker(jobId, job.workerJs) //todo add new worker here, inject worker's id in template
-				}
 			}
 		} ~
 		path("favicon.ico") {
@@ -150,5 +145,5 @@ trait HttpApi extends HttpService { this: BackRef =>
 		case _: NumberFormatException => None
 	}
 
-	def toJson[T](x: Iterable[T]): String = "[" + x.map("'" + _.toString + "'").reduceOption(_ + "," + _).getOrElse("") + "]"
+	def toJson[T](x: Iterable[T]): String = "[" + x.map("\"" + _ + "\"").reduceOption(_ + "," + _).getOrElse("") + "]"
 }

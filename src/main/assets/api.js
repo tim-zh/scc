@@ -16,7 +16,7 @@ var SCC = {
 			if (SCC._newWorkerCallback) {
 				for (var i = SCC._lastKnownWorkerId + 1; i < id; i++)
 					SCC._newWorkerCallback(i);
-				SCC._lastKnownWorkerId = id;
+				SCC._lastKnownWorkerId = id - 1;
 			}
 		});
 	},
@@ -24,9 +24,8 @@ var SCC = {
 	_updateMessageList: function() {
 		$.get('/job/' + SCC.jobId + '/messageList', { fromId: SCC._lastKnownMessageId }, function(msgs) {
 			if (SCC._newMessageCallback) {
-				for (var i = SCC._lastKnownMessageId + 1; i < msgs.length; i++)
-					SCC._newMessageCallback(msgs[i]);
-				SCC._lastKnownMessageId = msgs.length - 1;
+				msgs.forEach(function(msg) { SCC._newMessageCallback(msg) });
+				SCC._lastKnownMessageId += msgs.length;
 			}
 		});
 	},
@@ -51,30 +50,27 @@ var SCC = {
 
 	_newWorkerMessageCallback: null,
 
+	_lastKnownWorkerMessageId: -1,
+
 	workerSelfId: -1,
 
 	workerJs: "",
-
-	_notifyMaster: function(callback) {
-		$.get('/job/' + SCC.jobId + '/newWorker', function(data) {
-			SCC.workerSelfId = data;
-			alert(SCC.workerSelfId);
-			callback();
-		})
-	},
 
 	_heartBeat: function() {
 		$.get('/job/' + SCC.jobId + '/worker/' + SCC.workerSelfId + '/heartBeat');
 	},
 
 	_updateWorkerMessageList: function() {
-		$.get('/job/' + SCC.jobId + '/worker/' + SCC.workerSelfId + '/messageList', function(msg) {
-			//todo
+		$.get('/job/' + SCC.jobId + '/worker/' + SCC.workerSelfId + '/messageList', { fromId: SCC._lastKnownWorkerMessageId }, function(msgs) {
+			if (SCC._newWorkerMessageCallback) {
+				msgs.forEach(function(msg) { SCC._newWorkerMessageCallback(msg) });
+				SCC._lastKnownWorkerMessageId += msgs.length;
+			}
 		});
 	},
 
 	setNewMessageToWorkerCallback: function(callback) {
-		_newWorkerMessageCallback = callback;
+		SCC._newWorkerMessageCallback = callback;
 	},
 
 	sendMessageToMaster: function(message) {

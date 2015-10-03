@@ -1,10 +1,14 @@
-@(jobId: String, workerJs: String)
+@(jobId: String, workerId: String, workerJs: String)
 @wrapper {
 <div class="container-fluid">
 	<h1>job in progress</h1>
 </div>
 <script>
 	SCC.jobId = '@jobId';
-	SCC._notifyMaster(function() { @workerJs });
+	SCC.workerSelfId = @workerId;
+	setInterval(function() {
+		SCC._updateWorkerMessageList();
+	}, 2000);
+	@workerJs
 </script>
 }

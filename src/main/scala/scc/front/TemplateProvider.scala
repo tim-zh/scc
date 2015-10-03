@@ -7,5 +7,5 @@ object TemplateProvider {
 
 	def step2(jobId: String, masterJs: String): String = html.step2(jobId, masterJs).body
 
-	def worker(jobId: String, workerJs: String): String = html.worker(jobId, workerJs).body
+	def worker(jobId: String, workerId: String, workerJs: String): String = html.worker(jobId, workerId, workerJs).body
 }

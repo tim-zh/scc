@@ -10,7 +10,7 @@ trait Back {
 
 	def getJob(id: String): Future[Option[JobInfo]]
 
-	def addWorker(jobId: String): Future[Option[Int]]
+	def addWorker(jobId: String): Future[Option[(JobInfo, Int)]]
 
 	def addMessageToMaster(jobId: String, msg: String): Future[Option[String]]
 
@@ -22,16 +22,16 @@ class BackImpl extends Back {
 
 	override def addJob(workerJs: String): Future[String] = {
 		val jobid = UUID.randomUUID().toString
-		storage.put(jobid, JobInfo(jobid, workerJs, -1))
+		storage.put(jobid, JobInfo(jobid, workerJs, 0))
 		Future.successful(jobid)
 	}
 
 	override def getJob(id: String): Future[Option[JobInfo]] = Future.successful(storage.get(id))
 
-	override def addWorker(jobId: String): Future[Option[Int]] =
+	override def addWorker(jobId: String): Future[Option[(JobInfo, Int)]] =
 		Future.successful(storage.get(jobId) map { job =>
 			job.workers += 1
-			job.workers
+			(job, job.workers - 1)
 		})
 
 	override def addMessageToMaster(jobId: String, msg: String): Future[Option[String]] =
