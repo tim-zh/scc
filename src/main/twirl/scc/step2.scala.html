@@ -1,5 +1,5 @@
 @(jobId: String, masterJs: String)
-@wrapper {
+@wrapper("master_api") {
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-xs-6">
@@ -9,8 +9,8 @@
 				function startJob() {
 					$("#run")[0].style.display = "none";
 					setInterval(function() {
-						SCC._updateWorkersList();
-						SCC._updateMessageList();
+						SCC._listNewWorkers();
+						SCC._receiveMessages();
 					}, 2000);
 					@Html(masterJs)
 				}
