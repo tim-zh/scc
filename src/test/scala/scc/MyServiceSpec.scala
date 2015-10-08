@@ -1,33 +1,19 @@
 package scc
 
-import org.specs2.mutable.Specification
-import scc.front.HttpApi
-import spray.testkit.Specs2RouteTest
-import spray.http._
-import StatusCodes._
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{FlatSpec, Matchers}
+import scc.back.Back
+import scc.front._
+import spray.testkit.ScalatestRouteTest
 
-class MyServiceSpec extends Specification with Specs2RouteTest with HttpApi {
+class MyServiceSpec extends FlatSpec with ScalatestRouteTest with Matchers with MockitoSugar with HttpApi with BackRef {
+  override val back: Back = mock[Back]
+
   def actorRefFactory = system
-  
-  "MyService" should {
 
-    "return a greeting for GET requests to the root path" in {
-      Get() ~> route ~> check {
-        responseAs[String] must contain("Say hello")
-      }
-    }
-
-    "leave GET requests to other paths unhandled" in {
-      Get("/kermit") ~> route ~> check {
-        handled must beFalse
-      }
-    }
-
-    "return a MethodNotAllowed error for PUT requests to the root path" in {
-      Put() ~> sealRoute(route) ~> check {
-        status === MethodNotAllowed
-        responseAs[String] === "HTTP method not allowed, supported methods: GET"
-      }
+  "Front" should "respond to heartbeat" in {
+    Get("/job/123/worker/456/heartBeat") ~> route ~> check {
+      responseAs[String] should equal("ok")
     }
   }
 }
